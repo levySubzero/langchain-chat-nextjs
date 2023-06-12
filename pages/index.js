@@ -4,6 +4,7 @@ import styles from '../styles/Home.module.css'
 import Image from 'next/image'
 import ReactMarkdown from 'react-markdown'
 import CircularProgress from '@mui/material/CircularProgress';
+import io from 'socket.io-client';
 
 export default function Home() {
 
@@ -16,6 +17,7 @@ export default function Home() {
       "type": "apiMessage"
     }
   ]);
+  const [socket, setSocket] = useState(null);
 
   const messageListRef = useRef(null);
   const textAreaRef = useRef(null);
@@ -26,10 +28,30 @@ export default function Home() {
     messageList.scrollTop = messageList.scrollHeight;
   }, [messages]);
 
-  // Focus on text field on load
+  // Initialise sockets & Focus on text field on load
   useEffect(() => {
+    const newSocket = io('http://localhost:3001/');
+    setSocket(newSocket);
     textAreaRef.current.focus();
+
+    return () => {
+      newSocket.close();
+    };
   }, []);
+
+  // useEffect(() => {
+  //   if (socket) {
+  //     const handleMessage = (message) => {
+  //       setMessages((prevMessages) => [...prevMessages, message]);
+  //     };
+
+  //     socket.on('message', handleMessage);
+
+  //     return () => {
+  //       socket.off('message', handleMessage);
+  //     };
+  //   }
+  // }, [socket]);
 
   // Handle errors
   const handleError = () => {
@@ -42,37 +64,25 @@ export default function Home() {
   const handleSubmit = async(e) => {
     e.preventDefault();
 
-    if (userInput.trim() === "") {
+    if (!socket && userInput.trim() === "") {
       return;
     }
 
     setLoading(true);
     setMessages((prevMessages) => [...prevMessages, { "message": userInput, "type": "userMessage" }]);
 
-    // Send user question and history to API
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-          "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ question: userInput, history: history }),
+    // Send user question via websockets
+    socket.emit('question', userInput, (response) => {
+      // Simulate a delay of 2 seconds before updating the messages state
+      setTimeout(() => {
+        console.log(response)
+        setMessages((prevMessages) => [...prevMessages, { "message": response, "type": "apiMessage" }]);
+      }, 500);
     });
-
-    if (!response.ok) {
-      handleError();
-      return;
-  }
 
     // Reset user input
     setUserInput("");
-    const data = await response.json();
-
-    if (data.result.error === "Unauthorized") {
-      handleError();
-      return;
-    }
-
-    setMessages((prevMessages) => [...prevMessages, { "message": data.result.success, "type": "apiMessage" }]);
+    
     setLoading(false);
     
   };
@@ -105,11 +115,9 @@ export default function Home() {
       </Head>
       <div className={styles.topnav}>
       <div className = {styles.navlogo}>
-    <a href="/">LangChain</a>
-    </div>
+        <a href="/">Chat</a>
+      </div>
     <div className = {styles.navlinks}>
-    <a href="https://langchain.readthedocs.io/en/latest/" target="_blank">Docs</a>
-    <a href="https://github.com/zahidkhawaja/langchain-chat-nextjs" target="_blank">GitHub</a>
     </div>
 </div>
       <main className={styles.main}>
@@ -163,7 +171,7 @@ export default function Home() {
             </form>
             </div>
             <div className = {styles.footer}>
-            <p>Powered by <a href = "https://github.com/hwchase17/langchain" target="_blank">LangChain</a>. Built by <a href="https://twitter.com/chillzaza_" target="_blank">Zahid</a>.</p>
+            <p>.</p>
             </div>
         </div>
       </main>

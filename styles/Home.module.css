@@ -162,6 +162,13 @@
   animation: fadein 0.5s;
 }
 
+.usermessage {
+  padding: 1.5rem;
+  color: #ECECF1;
+  animation: fadein 0.5s;
+  align-items: center;
+}
+
 @keyframes fadein {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -169,6 +176,7 @@
 
 .apimessage, .usermessage, .usermessagewaiting {
   display: flex;
+  position: relative;
 }
 
 .markdownanswer {
@@ -194,7 +202,12 @@
   margin: 1rem;
 }
 
-.boticon, .usericon {
+.boticon {
+  margin-right: 1rem;
+  border-radius: 0.1rem;
+}
+
+.usericon {
   margin-right: 1rem;
   border-radius: 0.1rem;
 }
@@ -218,7 +231,7 @@
   height: 65vh;
   background: #070809;
   border-radius: 0.5rem;
-  border: 1px solid #30373d;
+  border: 1px solid #487399;
   display: flex;
   justify-content: center;
   align-items: center;
